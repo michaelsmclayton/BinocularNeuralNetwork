@@ -11,7 +11,7 @@ numberOfEyes = 2
 inputImageSize = 30
 
 # Model parameters
-learningRate = 0.001
+learningRate = 0.01
 numberOfOutputs = 2
 batchSize = 100
 nEpochs = 200
@@ -57,10 +57,9 @@ groundTruth = tf.placeholder(shape=[batchSize, numberOfOutputs], dtype=tf.float3
 
 #######################################
 # Layer 0. Convolutional layer (initialised with Gabor filters of differing phases)
-#######################################
-convolutionFilters = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
-W1 = tf.convert_to_tensor(convolutionFilters, name='W1', dtype=tf.float32)
-b1 = tf.convert_to_tensor(np.zeros((numberOfFilters,)), name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
+####################################### 
+W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
+b1 = tf.Variable(np.zeros((numberOfFilters,)), trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
 '''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
 
 ##############################
@@ -79,10 +78,10 @@ b_out = tf.Variable(tf.zeros([numberOfOutputs]), name='b_out')
 # Function to create a convolution layer, with a bias term and non-linear activation function
 def convPoolingLayer(x, W, b, k):
     conv = tf.nn.conv2d(input=x, filter=W, strides=[1, 1, 1, 1], padding="VALID", data_format='NHWC',) # Perform convolution
-    maxPool = tf.nn.max_pool(conv, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding='VALID') # Perform max-pooling
-    conv_with_b = tf.nn.bias_add(maxPool, b) # Add the bias term (noting that there are still 28 filters)
+    conv_with_b = tf.nn.bias_add(conv, b) # Add the bias term (noting that there are still 28 filters)
     conv_out = tf.nn.relu(conv_with_b) # Pass through a rectified non-linear function
-    return conv_out # Return output
+    maxPool = tf.nn.max_pool(conv_out, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding='VALID') # Perform max-pooling
+    return maxPool # Return output
 
 # Function to generate the convolutional neural network
 def model():
@@ -109,6 +108,9 @@ correct_pred = tf.equal(tf.argmax(model_op, 1), tf.argmax(groundTruth, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 merged = tf.summary.merge_all()
+
+print('Trainable variables = ')
+print(tf.trainable_variables(scope=None))
 
 
 ######################################################################################
@@ -143,8 +145,9 @@ with tf.Session() as sess:
             _, accuracy_val, summary = sess.run([train_op, accuracy, merged], feed_dict={inputImage: currentBatch, groundTruth: currentGroundTruth})
             summary_writer.add_summary(summary, i)
             i += 1
-            print(sess.run(W1[1,1,1,1]))
-            #print(minibatchIndex, accuracy_val)
+            print(sess.run(cost, feed_dict={inputImage: currentBatch, groundTruth: currentGroundTruth}), accuracy_val)
+            # print(sess.run(W1[1,1,1,1]))
+            # print(minibatchIndex, accuracy_val)
 
         
         # print('DONE WITH EPOCH')

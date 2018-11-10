@@ -60,7 +60,7 @@ def initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize):
 
 
     # Display the weights
-    W = tf.Variable(initial_value=filters)
+    W = tf.Variable(initial_value=filters, dtype=tf.float32, trainable=True, name='kernelWeights')
 
     # Function to display the filter weights
     def show_weights(W, filename=None):
@@ -85,4 +85,4 @@ def initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize):
     #     show_weights(W_val)
 
     # Return weights
-    return filters
+    return W
