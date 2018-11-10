@@ -4,20 +4,30 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from initialiseGaborFilters import initialiseGaborFilters
+from loadData import loadAndPreprocessData
 
 # Constant features of the input data
 numberOfEyes = 2
 inputImageSize = 30
 
 # Model parameters
-numberOfOutputs = 2
 learningRate = 0.001
+numberOfOutputs = 2
 batchSize = 100
 nEpochs = 2
 
 # Filter parameters
 numberOfFilters = 28
 filterSize = 19
+
+
+######################################################################################
+#                    IMPORT AND SEGMENT THE BINOCULAR IMAGE DATA
+######################################################################################
+datasets = loadAndPreprocessData("lytroPatches_30x30.pkl.gz")
+train_set_x, train_set_y = datasets[0]
+valid_set_x, valid_set_y = datasets[1]
+test_set_x, test_set_y = datasets[2]
 
 
 ######################################################################################
@@ -36,6 +46,7 @@ y = tf.placeholder(shape=[None, numberOfOutputs], name='prediction', dtype=tf.fl
 convolutionFilters = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
 W1 = tf.convert_to_tensor(convolutionFilters, name='W1', dtype=tf.float32)
 b1 = tf.convert_to_tensor(np.zeros((numberOfFilters,)), name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
+'''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
 
 ##############################
 # Layer 1. Logistic Regression layer
@@ -62,8 +73,22 @@ def convPoolingLayer(x, W, b, k):
 def model():
     convOut = convPoolingLayer(x=inputImage, W=W1, b=b1, k=2) # Convolutional layer
     flattenedConvOut = tf.layers.flatten(convOut) # Flatten convolutional results for input i
-    reluOut = tf.nn.relu(flattenedConvOut) # Pass output through rectified non-linear function
-    out = tf.add(tf.matmul(reluOut, W_out), b_out) # Pass output through final layer
-    return out
+    out = tf.add(tf.matmul(flattenedConvOut, W_out), b_out) # Pass output through final layer
+    return tf.nn.softmax(out)
 model_op = model()
-print(model)
+
+
+# ######################################################################################
+# #                               MEASURE PERFORMANCE
+# ######################################################################################
+
+# # Define the cost function using softmax_cross_entropy_with_logits_v2()
+# cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=model_op, labels=y))
+# tf.summary.scalar('cost', cost)
+
+# # Define the training op to minimise the cost function
+# train_op = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+
+# # Check if prediction is correct
+# correct_pred = tf.equal(tf.argmax(model_op, 1), tf.argmax(y, 1))
+# accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
