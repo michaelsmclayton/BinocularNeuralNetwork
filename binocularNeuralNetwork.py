@@ -11,10 +11,10 @@ numberOfEyes = 2
 inputImageSize = 30
 
 # Model parameters
-learningRate = 0.01
+learningRate = 0.1
 numberOfOutputs = 2
 batchSize = 100
-nEpochs = 200
+# nEpochs = 200
 
 # Filter parameters
 numberOfFilters = 28
@@ -34,7 +34,6 @@ transpositionIndices = [0, 2, 3, 1]
 train_set_x = np.transpose(train_set_x, transpositionIndices)
 valid_set_x = np.transpose(valid_set_x, transpositionIndices)
 test_set_x = np.transpose(test_set_x, transpositionIndices)
-print('test = ', train_set_x.shape)
 
 # Compute the number of minibatches for training, validation and testing
 n_train_batches = train_set_x.shape[0]
@@ -109,45 +108,118 @@ accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 merged = tf.summary.merge_all()
 
-print('Trainable variables = ')
-print(tf.trainable_variables(scope=None))
-
 
 ######################################################################################
 #                               TRAIN THE CLASSIFIER
 ######################################################################################
+
 with tf.Session() as sess:
-    # Setup
+
+    ###########################################################
+    #                            Setup
+    ###########################################################
     summary_writer = tf.summary.FileWriter('summaries/train', sess.graph)
     sess.run(tf.global_variables_initializer())
 
-    # Number of batches
-    numberOfBatches = n_train_batches
+    # Function to get data mini-batch
+    def getBatchData(data, batchIndex):
+        return data[batchIndex * batchSize: (batchIndex + 1) * batchSize]
 
-    # Perform analysis loop
-    print('batch size', batchSize)
-    for epoch in range(0, nEpochs):
-        print('EPOCH', epoch)
+    # Function to get batch labels
+    def getBatchLabels(data, batchIndex):
+        labels = data[batchIndex * batchSize: (batchIndex + 1) * batchSize]
+        currentGroundTruth = tf.one_hot(labels, numberOfOutputs, on_value=1., off_value=0., axis=-1)
+        return sess.run(currentGroundTruth)
 
-        i = 0
+    # Function to analyse all mini-batches for a given dataset
+    def trainAllBatchesOfDataset(xData, yData, numberOfBatches, boredom):
+
+        # Initialise vector to store latest costs and accuracy
+        currentCosts = np.zeros(numberOfBatches)
+        currentAccuracies = np.zeros(numberOfBatches)
+
+        # Loop over all batches
         for minibatchIndex in xrange(numberOfBatches):
-
-            # Get current batch data
-            currentBatch = train_set_x[minibatchIndex * batchSize: (minibatchIndex + 1) * batchSize]
             
-            # Get ground truth labels
-            labels = train_set_y[minibatchIndex * batchSize: (minibatchIndex + 1) * batchSize]
-            onehot_labels = tf.one_hot(labels, numberOfOutputs, on_value=1., off_value=0., axis=-1)
-            onehot_vals = sess.run(onehot_labels)
-            currentGroundTruth = onehot_vals
+            # Get current boredom
+            boredom = (epoch - 1) * n_train_batches + minibatchIndex 
+            
+            # Get data
+            currentBatch = getBatchData(data=xData, batchIndex=minibatchIndex) # Get current batch data
+            currentGroundTruth = getBatchLabels(data=yData, batchIndex=minibatchIndex) # Get ground truth labels
+            
+            # Run training op and get accuracy
+            _, currentAccuracies[minibatchIndex], currentCosts[minibatchIndex] = sess.run(
+                [train_op, accuracy, cost],
+                feed_dict={
+                    inputImage: currentBatch,
+                    groundTruth: currentGroundTruth
+                }
+            )
 
-            # Run training operation and get accuracy
-            _, accuracy_val, summary = sess.run([train_op, accuracy, merged], feed_dict={inputImage: currentBatch, groundTruth: currentGroundTruth})
-            summary_writer.add_summary(summary, i)
-            i += 1
-            print(sess.run(cost, feed_dict={inputImage: currentBatch, groundTruth: currentGroundTruth}), accuracy_val)
-            # print(sess.run(W1[1,1,1,1]))
-            # print(minibatchIndex, accuracy_val)
+            # Break if patience threshold is passed
+            if patience <= boredom:
+                doneLooping = True
+                break
 
-        
-        # print('DONE WITH EPOCH')
+        # Return mean cost/accuracy, and current boredom
+        meanCost = np.mean(currentCosts)
+        meanAccuracy = np.mean(currentAccuracies)
+        return [meanCost, meanAccuracy, boredom]
+
+
+    ###########################################################
+    #                            TRAINING
+    ###########################################################
+    epoch = 1
+    boredom = 0 # Variable to track boredom
+    doneLooping = False
+    bestValidationCost = np.inf # Initialise to track best validation result
+    saver = tf.train.Saver()
+
+    # Early-stopping parameters
+    patience = 10000  # look as this many examples regardless
+    patienceIncrease = 2  # wait this much longer when a new best is found
+    improvementThreshold = 0.995  # threshold for significant improvement
+    while (not doneLooping):
+
+        ######################################################
+        # Perform one epoch with TRAINING data set
+        print 'Training:', 'Epoch', epoch
+        [trainingCost, trainingAccuracy, boredom] = trainAllBatchesOfDataset(
+            xData=train_set_x,
+            yData=train_set_y,
+            numberOfBatches=n_train_batches,
+            boredom=boredom)
+        print 'cost =',  trainingCost, ' accuracy = ', trainingAccuracy
+
+
+        ######################################################
+        # Perform one epoch with VALIDATION data set
+        print 'Validation: ', 'Epoch', epoch
+        [validationCost, validationAccuracy, boredom] = trainAllBatchesOfDataset(
+            xData=valid_set_x,
+            yData=valid_set_y,
+            numberOfBatches=n_valid_batches,
+            boredom=boredom)
+        print 'cost = ',  validationCost, 'accuracy = ', validationAccuracy
+        print 'boredom = ',  boredom, 'threshold = ', patience
+        print ' '
+
+        ######################################################
+        # If the validation cost beats the current best
+        if validationCost < bestValidationCost:
+
+            # Increase patience if loss improvement is good enough
+            if validationCost < bestValidationCost * improvementThreshold:
+                patience = max(patience, boredom * patienceIncrease)
+
+            # Save the best validation score and iteration number
+            bestValidationCost = validationCost
+            saver.save(sess, './modelData/model.ckpt')
+
+        epoch += 1 # Increment epoch
+
+
+
+
