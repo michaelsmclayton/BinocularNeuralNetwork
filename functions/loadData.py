@@ -2,7 +2,7 @@ import gzip
 import cPickle
 import numpy as np
 
-def loadAndPreprocessData(datasetFile):
+def loadBatchedData(datasetFile, batchSize):
 
     ##################################################
     # Load data
@@ -81,9 +81,25 @@ def loadAndPreprocessData(datasetFile):
         valid_set_y = data_y[validationIndices]
         test_set_y = data_y[testingIndices]
 
-        # Return array of data        
-        return [(train_set_x, train_set_y),
-                (valid_set_x, valid_set_y),
-                (test_set_x, test_set_y)] 
+        # Transpose the matrices into the right shape
+        transpositionIndices = [0, 2, 3, 1]
+        train_set_x = np.transpose(train_set_x, transpositionIndices)
+        valid_set_x = np.transpose(valid_set_x, transpositionIndices)
+        test_set_x = np.transpose(test_set_x, transpositionIndices)
+
+        # Compute the number of minibatches for training, validation and testing
+        n_train_batches = train_set_x.shape[0]
+        n_valid_batches = valid_set_x.shape[0]
+        n_test_batches = test_set_x.shape[0]
+        n_train_batches /= batchSize
+        n_valid_batches /= batchSize
+        n_test_batches /= batchSize
+
+        # Return data
+        return [
+            train_set_x, train_set_y, n_train_batches,
+            valid_set_x, valid_set_y, n_valid_batches,
+            test_set_x, test_set_y, n_test_batches
+        ]
     
     return preprocessData(dataset)

@@ -3,13 +3,11 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from initialiseGaborFilters import initialiseGaborFilters
-from loadData import loadAndPreprocessData
+from functions.initialiseGaborFilters import initialiseGaborFilters
+from functions.loadData import loadBatchedData
 
 '''             THINGS TO DO
- - Find a way of definitely saving weights and biases
  - Change the cost function so that it matches that of Goncalves
- - From saved weights, look at the filter kernals
  - Read relevant parts of paper again to see if you can replicate
 '''
 
@@ -21,7 +19,6 @@ inputImageSize = 30
 learningRate = 0.01
 numberOfOutputs = 2
 batchSize = 100
-# nEpochs = 200
 
 # Filter parameters
 numberOfFilters = 28
@@ -31,24 +28,10 @@ filterSize = 19
 ######################################################################################
 #                    IMPORT AND SEGMENT THE BINOCULAR IMAGE DATA
 ######################################################################################
-datasets = loadAndPreprocessData("lytroPatches_30x30.pkl.gz")
-train_set_x, train_set_y = datasets[0]
-valid_set_x, valid_set_y = datasets[1]
-test_set_x, test_set_y = datasets[2]
-
-# Transpose the matrices into the right shape
-transpositionIndices = [0, 2, 3, 1]
-train_set_x = np.transpose(train_set_x, transpositionIndices)
-valid_set_x = np.transpose(valid_set_x, transpositionIndices)
-test_set_x = np.transpose(test_set_x, transpositionIndices)
-
-# Compute the number of minibatches for training, validation and testing
-n_train_batches = train_set_x.shape[0]
-n_valid_batches = valid_set_x.shape[0]
-n_test_batches = test_set_x.shape[0]
-n_train_batches /= batchSize
-n_valid_batches /= batchSize
-n_test_batches /= batchSize
+dataSource = "./rawData/lytroPatches_30x30.pkl.gz"
+[train_set_x, train_set_y, n_train_batches,
+valid_set_x, valid_set_y, n_valid_batches,
+test_set_x, test_set_y, n_test_batches] = loadBatchedData(dataSource, batchSize=batchSize)
 
 
 ######################################################################################
