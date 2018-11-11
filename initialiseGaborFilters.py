@@ -63,26 +63,31 @@ def initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize):
     W = tf.Variable(initial_value=filters, dtype=tf.float32, trainable=True, name='kernelWeights')
 
     # Function to display the filter weights
-    def show_weights(W, filename=None):
+    def showWeights(W, eye, filename=None):
         plt.figure()
         rows, cols = 7, 4 # Define enough rows and columns to show the 28 figures 
         for i in range(np.shape(W)[3]):
-            img = W[:, :, 1, i]
+            img = W[:, :, eye, i]
             plt.subplot(rows, cols, i + 1)
             plt.imshow(img, cmap='gray', interpolation='none') # Visualize each filter matrix
             plt.axis('off')
         if filename:
+            filename = './weightFigures/baseWeightsForEye' + str(eye) + '.png'
             plt.savefig(filename)
         else:
             plt.show()
 
-    # # Display the weights
-    # with tf.Session() as sess:
-    #     sess.run(tf.global_variables_initializer())
+    # Display the weights
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
 
-    #     # Displauy the intial weights
-    #     W_val = sess.run(W)
-    #     show_weights(W_val)
+        # Displauy the intial weights
+        W_val = sess.run(W)
+        showWeights(W=W_val, eye=0, filename=False)
+        # showWeights(W=W_val, eye=1, filename=False)
 
     # Return weights
     return W
+
+if __name__ == "__main__":
+    initialiseGaborFilters(numberOfFilters=28, numberOfEyes=2, filterSize=19)

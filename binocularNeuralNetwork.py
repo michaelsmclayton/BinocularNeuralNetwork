@@ -6,12 +6,19 @@ import matplotlib.pyplot as plt
 from initialiseGaborFilters import initialiseGaborFilters
 from loadData import loadAndPreprocessData
 
+'''             THINGS TO DO
+ - Find a way of definitely saving weights and biases
+ - Change the cost function so that it matches that of Goncalves
+ - From saved weights, look at the filter kernals
+ - Read relevant parts of paper again to see if you can replicate
+'''
+
 # Constant features of the input data
 numberOfEyes = 2
 inputImageSize = 30
 
 # Model parameters
-learningRate = 0.1
+learningRate = 0.01
 numberOfOutputs = 2
 batchSize = 100
 # nEpochs = 200
