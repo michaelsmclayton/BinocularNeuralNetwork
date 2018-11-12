@@ -57,6 +57,7 @@ def initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize):
         # Copy current gabor filter to other eye (i.e. making left and right filters the same)
         filters[:, :, 1, i] = filters[:, :, 0, i]
         i += 1
+    np.save('initialFilters', filters)
 
 
     # Display the weights
