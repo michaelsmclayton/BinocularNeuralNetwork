@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from loadModel import loadModel
+from functions.loadModel import loadModel
 
 # Restore model
 [kernelWeights, kernalBiases, outputWeights, outputBiases] = loadModel(baseDir='../../bestModel/')
