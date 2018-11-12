@@ -3,7 +3,7 @@
 - See [link to original code](https://www.repository.cam.ac.uk/handle/1810/263961) (written using Theano)
 
 ----
-## Filter kernels
+## Initial vs. learned filter kernels
 - Equivalent to Figure 2B, in original paper 
 ![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/kernelsBeforeAndAfterTraining.png)
 
@@ -13,7 +13,7 @@
 - Equivalent to Figure 3B, in original paper
 ![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/disparityResultsForCorrAndAntiCorr.png)
 
-## Optimal input image for near unit activation learned from random noise as starting input
+## Optimal images for near-unit activation, learned starting from random noise
 - Code generating result = 'findOptimalStimulus.py'
 - Equivalent to Figure 4B, in original paper
 ![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/optimisedInputImages.png)
