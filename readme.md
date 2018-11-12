@@ -9,7 +9,11 @@
 
 ----
 ## Depth unit activations for correlated vs. uncorrelated RDSs
-- Analysis result, taken from 'cRDS-vs-aRDS.py'
+- Code generating result = 'cRDS-vs-aRDS.py'
 - Equivalent to Figure 3B, in original paper
 ![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/disparityResultsForCorrAndAntiCorr.png)
 
+## Optimal input image for near unit activation learned from random noise as starting input
+- Code generating result = 'findOptimalStimulus.py'
+- Equivalent to Figure 4B, in original paper
+![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/optimisedInputImages.png)
