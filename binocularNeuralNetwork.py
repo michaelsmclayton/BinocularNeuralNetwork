@@ -7,11 +7,6 @@ from functions.initialiseGaborFilters import initialiseGaborFilters
 from functions.loadPatchData import loadBatchedData
 from functions.generateCNN import generateCNN
 
-'''             THINGS TO DO
- - Change the cost function so that it matches that of Goncalves
- - Read relevant parts of paper again to see if you can replicate
-'''
-
 # Constant features of the input data
 numberOfEyes = 2
 inputImageSize = 30
@@ -33,7 +28,7 @@ dataSource = "./rawData/lytroPatches_30x30.pkl.gz"
 [train_set_x, train_set_y, n_train_batches,
 valid_set_x, valid_set_y, n_valid_batches,
 test_set_x, test_set_y, n_test_batches] = loadBatchedData(dataSource, batchSize=batchSize)
-print('Shape! = ', test_set_x.shape)
+print(' ')
 
 ######################################################################################
 #                       DEFINE WEIGHTS AND BIASES FOR EACH LAYER
@@ -48,7 +43,9 @@ groundTruth = tf.placeholder(shape=[batchSize, numberOfOutputs], dtype=tf.float3
 #######################################
 # Layer 0. Convolutional layer (initialised with Gabor filters of differing phases)
 ####################################### 
-W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
+# W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
+randomWeights = np.random.rand(19,19,2,28)
+W1 = tf.Variable(initial_value=randomWeights, dtype=tf.float32, trainable=True, name='kernelWeights')
 b1 = tf.Variable(np.zeros((numberOfFilters,)), trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
 '''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
 
