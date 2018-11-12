@@ -4,7 +4,8 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from functions.initialiseGaborFilters import initialiseGaborFilters
-from functions.loadData import loadBatchedData
+from functions.loadPatchData import loadBatchedData
+from functions.generateCNN import generateCNN
 
 '''             THINGS TO DO
  - Change the cost function so that it matches that of Goncalves
@@ -32,7 +33,7 @@ dataSource = "./rawData/lytroPatches_30x30.pkl.gz"
 [train_set_x, train_set_y, n_train_batches,
 valid_set_x, valid_set_y, n_valid_batches,
 test_set_x, test_set_y, n_test_batches] = loadBatchedData(dataSource, batchSize=batchSize)
-
+print('Shape! = ', test_set_x.shape)
 
 ######################################################################################
 #                       DEFINE WEIGHTS AND BIASES FOR EACH LAYER
@@ -59,27 +60,10 @@ numberOfFinalWeights = imgSizeAfterPooling * imgSizeAfterPooling * numberOfFilte
 W_out = tf.Variable(tf.zeros([numberOfFinalWeights, numberOfOutputs]), name='W_out')
 b_out = tf.Variable(tf.zeros([numberOfOutputs]), name='b_out')
 
-
-######################################################################################
-#                   DEFINE THE LAYERS AND NETWORK ARCHITECTURE
-######################################################################################
-
-# Function to create a convolution layer, with a bias term and non-linear activation function
-def convPoolingLayer(x, W, b, k):
-    conv = tf.nn.conv2d(input=x, filter=W, strides=[1, 1, 1, 1], padding="VALID", data_format='NHWC',) # Perform convolution
-    conv_with_b = tf.nn.bias_add(conv, b) # Add the bias term (noting that there are still 28 filters)
-    conv_out = tf.nn.relu(conv_with_b) # Pass through a rectified non-linear function
-    maxPool = tf.nn.max_pool(conv_out, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding='VALID') # Perform max-pooling
-    return maxPool # Return output
-
-# Function to generate the convolutional neural network
-def model():
-    convOut = convPoolingLayer(x=inputImage, W=W1, b=b1, k=2) # Convolutional layer
-    flattenedConvOut = tf.layers.flatten(convOut) # Flatten convolutional results for input i
-    out = tf.add(tf.matmul(flattenedConvOut, W_out), b_out) # Pass output through final layer
-    return tf.nn.softmax(out) # Use softmax for classification
-model_op = model()
-
+##############################
+# Generate full convolution network
+##############################
+model_op = generateCNN(inputImage, W1, b1, W_out, b_out)
 
 ######################################################################################
 #                               MEASURE PERFORMANCE
@@ -209,7 +193,3 @@ with tf.Session() as sess:
             saver.save(sess, './modelData/model.ckpt')
 
         epoch += 1 # Increment epoch
-
-
-
-

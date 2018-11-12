@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from loadModel import loadModel
 
 # Restore model
-[kernelWeights, kernalBiases, outputWeights, outputBiases] = loadModel()
+[kernelWeights, kernalBiases, outputWeights, outputBiases] = loadModel(baseDir='../../bestModel/')
 print 'Restoring mode parameters'
 
 # Function to display weights
