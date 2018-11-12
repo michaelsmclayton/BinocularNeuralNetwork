@@ -4,6 +4,7 @@
 
 ----
 ## Filter kernels
+- Equivalent to Figure 2B, in original paper 
 ![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/kernelsBeforeAndAfterTraining.png)
 
 ----
