@@ -8,4 +8,4 @@ see [link to paper](https://www.cell.com/current-biology/fulltext/S0960-9822(17)
 ----
 ## Depth unit activations for correlated vs. uncorrelated RDSs
 ![](https://github.com/michaelsmclayton/BinocularNeuralNetwork/raw/master/figures/disparityResultsForCorrAndAntiCorr.png)
-
+##### Analysis result, taken from 'cRDS-vs-aRDS.py'
