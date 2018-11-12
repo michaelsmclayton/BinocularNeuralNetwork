@@ -51,6 +51,11 @@ tf.summary.scalar('cost', cost)
 correct_pred = tf.equal(tf.argmax(model, 1), tf.argmax(groundTruth, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+
+##################################################################
+# Analyse model classification of RDSs at different disparities
+##################################################################
+
 # Get performance
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
@@ -76,7 +81,6 @@ antiDispActiv = getActivPerDisp(aRDS_activations, aRDS_disparities, outputNeuron
 
 ##############################################
 # Plot results
-###############################################
 ax = plt.subplot(111)
 
 # Correlated results

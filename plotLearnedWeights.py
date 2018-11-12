@@ -6,7 +6,7 @@ from functions.loadModel import loadModel
 
 # Restore model
 print 'Restoring mode parameters'
-initialWeights = np.load('./rawData/initialFilters.npy')
+initialWeights = np.load('./savedData/initialFilters.npy')
 [kernelWeights, kernalBiases, outputWeights, outputBiases] = loadModel(baseDir='./bestModel/')
 
 # Horizontal cross-section
