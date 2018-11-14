@@ -3,7 +3,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from functions.initialiseGaborFilters import initialiseGaborFilters
+from functions.loadModel import loadModel
 from functions.loadPatchData import loadBatchedData
 from functions.generateCNN import generateCNN
 
@@ -28,7 +28,6 @@ dataSource = "./rawData/lytroPatches_30x30.pkl.gz"
 [train_set_x, train_set_y, n_train_batches,
 valid_set_x, valid_set_y, n_valid_batches,
 test_set_x, test_set_y, n_test_batches] = loadBatchedData(dataSource, batchSize=batchSize)
-print(' ')
 
 ######################################################################################
 #                       DEFINE WEIGHTS AND BIASES FOR EACH LAYER
@@ -40,22 +39,30 @@ print(' ')
 inputImage = tf.placeholder(shape=[batchSize, inputImageSize, inputImageSize, numberOfEyes], dtype=tf.float32, name='input')
 groundTruth = tf.placeholder(shape=[batchSize, numberOfOutputs], dtype=tf.float32, name='groundTruth')
 
-#######################################
-# Layer 0. Convolutional layer (initialised with Gabor filters of differing phases)
-####################################### 
-# W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
-randomWeights = np.random.rand(19,19,2,28)
-W1 = tf.Variable(initial_value=randomWeights, dtype=tf.float32, trainable=True, name='kernelWeights')
-b1 = tf.Variable(np.zeros((numberOfFilters,)), trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
-'''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
+# #######################################
+# # Layer 0. Convolutional layer (initialised with random noise filters)
+# ####################################### 
+# # W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
+# randomWeights = np.random.rand(19,19,2,28)
+# W1 = tf.Variable(initial_value=randomWeights, dtype=tf.float32, trainable=True, name='kernelWeights')
+# b1 = tf.Variable(np.zeros((numberOfFilters,)), trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
+# '''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
 
-##############################
-# Layer 1. Logistic Regression layer
-##############################
-imgSizeAfterPooling = 6
-numberOfFinalWeights = imgSizeAfterPooling * imgSizeAfterPooling * numberOfFilters
-W_out = tf.Variable(tf.zeros([numberOfFinalWeights, numberOfOutputs]), name='W_out')
-b_out = tf.Variable(tf.zeros([numberOfOutputs]), name='b_out')
+# ##############################
+# # Layer 1. Logistic Regression layer
+# ##############################
+# imgSizeAfterPooling = 6
+# numberOfFinalWeights = imgSizeAfterPooling * imgSizeAfterPooling * numberOfFilters
+# W_out = tf.Variable(tf.zeros([numberOfFinalWeights, numberOfOutputs]), name='W_out')
+# b_out = tf.Variable(tf.zeros([numberOfOutputs]), name='b_out')
+
+# Restore model from saved
+print 'Restoring mode parameters...'
+[W1, b1, W_out, b_out] = loadModel(baseDir='./randomNoiseModel/')
+W1 = tf.Variable(initial_value=W1, dtype=tf.float32, trainable=True, name='kernelWeights')
+b1 = tf.Variable(initial_value=b1, trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
+W_out = tf.Variable(initial_value=W_out, trainable=True, name='W_out')
+b_out = tf.Variable(initial_value=b_out, trainable=True, name='b_out')
 
 ##############################
 # Generate full convolution network
@@ -130,7 +137,7 @@ with tf.Session() as sess:
 
             # Break if patience threshold is passed
             if patience <= boredom:
-                doneLooping = True
+                # doneLooping = True
                 break
 
         # Return mean cost/accuracy, and current boredom
