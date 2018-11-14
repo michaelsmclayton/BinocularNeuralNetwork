@@ -125,7 +125,7 @@ with tf.Session() as sess:
             # Print progress every 10 batches
             if (minibatchIndex%10)==0:
                 print str(minibatchIndex) + '/' + str(numberOfBatches)
-                print(sess.graph_def.ByteSize())
+                # print(sess.graph_def.ByteSize())
             
             # Get current boredom
             boredom = (epoch - 1) * n_train_batches + minibatchIndex 
