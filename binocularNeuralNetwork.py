@@ -39,30 +39,30 @@ test_set_x, test_set_y, n_test_batches] = loadBatchedData(dataSource, batchSize=
 inputImage = tf.placeholder(shape=[batchSize, inputImageSize, inputImageSize, numberOfEyes], dtype=tf.float32, name='input')
 groundTruth = tf.placeholder(shape=[batchSize, numberOfOutputs], dtype=tf.float32, name='groundTruth')
 
-# #######################################
-# # Layer 0. Convolutional layer (initialised with random noise filters)
-# ####################################### 
-# # W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
-# randomWeights = np.random.rand(19,19,2,28)
-# W1 = tf.Variable(initial_value=randomWeights, dtype=tf.float32, trainable=True, name='kernelWeights')
-# b1 = tf.Variable(np.zeros((numberOfFilters,)), trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
-# '''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
+#######################################
+# Layer 0. Convolutional layer (initialised with random noise filters)
+####################################### 
+# W1 = initialiseGaborFilters(numberOfFilters, numberOfEyes, filterSize)
+randomWeights = np.random.rand(19,19,2,28)
+W1 = tf.Variable(initial_value=randomWeights, dtype=tf.float32, trainable=True, name='kernelWeights')
+b1 = tf.Variable(np.zeros((numberOfFilters,)), trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
+'''Filtering reduces the image size to (img_height-filter_height+1 , img_width-filter_width+1)'''
 
-# ##############################
-# # Layer 1. Logistic Regression layer
-# ##############################
-# imgSizeAfterPooling = 6
-# numberOfFinalWeights = imgSizeAfterPooling * imgSizeAfterPooling * numberOfFilters
-# W_out = tf.Variable(tf.zeros([numberOfFinalWeights, numberOfOutputs]), name='W_out')
-# b_out = tf.Variable(tf.zeros([numberOfOutputs]), name='b_out')
+##############################
+# Layer 1. Logistic Regression layer
+##############################
+imgSizeAfterPooling = 6
+numberOfFinalWeights = imgSizeAfterPooling * imgSizeAfterPooling * numberOfFilters
+W_out = tf.Variable(tf.zeros([numberOfFinalWeights, numberOfOutputs]), name='W_out')
+b_out = tf.Variable(tf.zeros([numberOfOutputs]), name='b_out')
 
-# Restore model from saved
-print 'Restoring mode parameters...'
-[W1, b1, W_out, b_out] = loadModel(baseDir='./randomNoiseModel/')
-W1 = tf.Variable(initial_value=W1, dtype=tf.float32, trainable=True, name='kernelWeights')
-b1 = tf.Variable(initial_value=b1, trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
-W_out = tf.Variable(initial_value=W_out, trainable=True, name='W_out')
-b_out = tf.Variable(initial_value=b_out, trainable=True, name='b_out')
+# # Restore model from saved
+# print 'Restoring mode parameters...'
+# [W1, b1, W_out, b_out] = loadModel(baseDir='./randomNoiseModel/')
+# W1 = tf.Variable(initial_value=W1, dtype=tf.float32, trainable=True, name='kernelWeights')
+# b1 = tf.Variable(initial_value=b1, trainable=True, name='b1', dtype=tf.float32) # initialse biases with zeros (with one bias for each filter)
+# W_out = tf.Variable(initial_value=W_out, trainable=True, name='W_out')
+# b_out = tf.Variable(initial_value=b_out, trainable=True, name='b_out')
 
 ##############################
 # Generate full convolution network
@@ -91,6 +91,10 @@ merged = tf.summary.merge_all()
 #                               TRAIN THE CLASSIFIER
 ######################################################################################
 
+# Op to get one-hot coding
+labels = tf.placeholder(tf.int32, [100, ], name='labels')
+oneHot = tf.one_hot(labels, 2, on_value=1., off_value=0., axis=-1)
+
 with tf.Session() as sess:
 
     ###########################################################
@@ -105,9 +109,8 @@ with tf.Session() as sess:
 
     # Function to get batch labels
     def getBatchLabels(data, batchIndex):
-        labels = data[batchIndex * batchSize: (batchIndex + 1) * batchSize]
-        currentGroundTruth = tf.one_hot(labels, numberOfOutputs, on_value=1., off_value=0., axis=-1)
-        return sess.run(currentGroundTruth)
+        currentLabels = data[batchIndex * batchSize: (batchIndex + 1) * batchSize]
+        return sess.run(oneHot, feed_dict={labels: currentLabels})
 
     # Function to analyse all mini-batches for a given dataset
     def trainAllBatchesOfDataset(xData, yData, numberOfBatches, boredom):
@@ -122,6 +125,7 @@ with tf.Session() as sess:
             # Print progress every 10 batches
             if (minibatchIndex%10)==0:
                 print str(minibatchIndex) + '/' + str(numberOfBatches)
+                print(sess.graph_def.ByteSize())
             
             # Get current boredom
             boredom = (epoch - 1) * n_train_batches + minibatchIndex 
@@ -129,7 +133,7 @@ with tf.Session() as sess:
             # Get data
             currentBatch = getBatchData(data=xData, batchIndex=minibatchIndex) # Get current batch data
             currentGroundTruth = getBatchLabels(data=yData, batchIndex=minibatchIndex) # Get ground truth labels
-            
+
             # Run training op and get accuracy
             _, currentAccuracies[minibatchIndex], currentCosts[minibatchIndex] = sess.run(
                 [train_op, accuracy, cost],

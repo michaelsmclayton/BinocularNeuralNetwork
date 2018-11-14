@@ -21,11 +21,12 @@ where:\
 \
 In my case, the commands were:\
 docker tag tensorflow-training-image eu.gcr.io/tensor-flow-training-222513/tensorflow-training\
-\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
-\cf0 docker push eu.gcr.io/tensor-flow-training-222513/tensorflow-training\
+docker push eu.gcr.io/tensor-flow-training-222513/tensorflow-training\
 \
+\
+Note that, to run a new Docker container from an image, use the following command:\
 \pard\pardeftab720\sl300\partightenfactor0
 
 \f1\fs26 \cf2 \cb3 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 docker run -i -t cea28fef3ec5 /bin/bash\
+docker run -i -t cea28fef3ec5 /bin/bash\
 }
